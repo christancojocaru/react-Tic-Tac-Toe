@@ -32,6 +32,30 @@ ol, ul {
     width: 34px;
 }
 
+.hovered {
+    background-color: red;
+}
+
+.info {
+    font-weight: initial;
+    font-size: 20px;
+    width: 34px;
+    height: 34px;
+    border: none;
+}
+
+.horizontal {
+    margin-bottom: 3px;
+}
+
+.vertical {
+    margin-right: 3px;
+}
+
+.horizontal.vertical {
+    font-style: italic;
+}
+
 .square:focus {
     outline: none;
 }
@@ -47,4 +71,25 @@ ol, ul {
 
 .game-info {
     margin-left: 20px;
+}
+
+li {
+    list-style-type: none;
+    margin: 5px 0;
+}
+
+li button {
+    width: 250px;
+    text-align: left;
+}
+
+.sort {
+    border: none;
+    width: initial;
+}
+
+.sort:hover {
+    .order {
+        background-color: red;
+    }
 }
