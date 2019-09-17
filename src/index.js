@@ -110,27 +110,27 @@ class Game extends React.Component {
         const current = history[history.length - 1];
         const squares = current.squares.slice();
         const winner = calculateWinner(squares);
-        // const squares_modified = squares.slice();
-        // squares_modified.splice(i, 1, xIsNext);
-        // console.log(calculateWinner(squares_modified));
-        //
-        // if (calculateWinner(squares_modified)) {
-        //     console.log("winner");
-        //     let winner = calculateWinner(squares_modified);
-        //     let hovered = Array(9).fill(false);
-        //     hovered.forEach(
-        //         (h_V, h_I) => {
-        //             winner[1].forEach(
-        //                 (l_V) => {
-        //                     if (h_I === l_V) {
-        //                         hovered.splice(h_I, 0, true);
-        //                     }
-        //                 });
-        //         });
-        //     this.setState({
-        //         hovered: hovered,
-        //     });
-        // } else if (winner[0]) {
+        const squares_modified = squares.slice();
+        squares_modified.splice(i, 1, xIsNext);
+        console.log(calculateWinner(squares_modified));
+
+        if (calculateWinner(squares_modified)) {
+            console.log("winner");
+            let winner = calculateWinner(squares_modified);
+            let hovered = Array(9).fill(false);
+            hovered.forEach(
+                (h_V, h_I) => {
+                    winner[1].forEach(
+                        (l_V) => {
+                            if (h_I === l_V) {
+                                hovered.splice(h_I, 0, true);
+                            }
+                        });
+                });
+            this.setState({
+                hovered: hovered,
+            });
+        }
         if (winner[0]) {
             alert("Player " + (this.state.xIsNext ? 'X' : 'O') + " won");
             return;
