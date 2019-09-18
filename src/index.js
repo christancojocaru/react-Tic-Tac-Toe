@@ -100,7 +100,9 @@ class Game extends React.Component {
             stepNumber: 0,
             xIsNext: true,
             hovered: Array(9).fill(false),
-            order: true
+            order: true,
+            won: false,
+            clickMe: false
         };
     }
 
@@ -115,7 +117,6 @@ class Game extends React.Component {
         console.log(calculateWinner(squares_modified));
 
         if (calculateWinner(squares_modified)) {
-            console.log("winner");
             let winner = calculateWinner(squares_modified);
             let hovered = Array(9).fill(false);
             hovered.forEach(
@@ -131,10 +132,10 @@ class Game extends React.Component {
                 hovered: hovered,
             });
         }
-        if (winner[0]) {
-            alert("Player " + (this.state.xIsNext ? 'X' : 'O') + " won");
-            return;
-        } else if (squares[i]) {
+        if (squares[i] || winner[0]) {
+            this.setState({
+                won: true
+            });
             return;
         }
         squares[i] = this.state.xIsNext ? 'X' : 'O';
@@ -198,18 +199,36 @@ class Game extends React.Component {
         );
     }
 
-    move(index, step, desc) {
+    move(index, step = null, desc) {
         return (
             <li key={index}>
                 <button
-                    onClick={() => this.jumpTo(index)}
-                    onMouseOver={() => this.highlightsSquare(step)}
-                    onMouseLeave={() => this.unHighlightsSquare()}
+                    onClick={() => {
+                        this.jumpTo(index);
+                        this.setState({clickMe: false});
+                        this.setState({
+                            clickMe: false,
+                            hovered: Array(9).fill(false),
+                            history: [{
+                                squares: Array(9).fill(null),
+                            }],
+                        });
+                    }}
+                    onMouseOver={() => index === 0 ? "" : this.unHighlightsSquare()}
+                    onMouseLeave={() => index === 0 ? "" : this.unHighlightsSquare()}
                 >
                     {desc}
                 </button>
             </li>
 
+        );
+    }
+
+    clickMeButton() {
+        return (
+            <div className="click-me">
+                &#8601; Click me!
+            </div>
         );
     }
 
@@ -235,6 +254,35 @@ class Game extends React.Component {
             status = 'Next player: ' + (this.state.xIsNext ? 'X' : 'O');
         }
 
+        if (winner[0] && this.state.won) {
+            setTimeout(() => {
+                this.setState({
+                    won: false,
+                    clickMe: true
+                });
+                let int = setInterval(() => {
+                    document.querySelectorAll(".game-info div")[1]
+                        .querySelector("div li").classList.toggle("red");
+                }, 200);
+                setTimeout(() => clearInterval(int), 1400)
+            }, 2000);
+            setTimeout(() => {
+                document.querySelector(".alert").style.animation = "fadeOut 500ms linear";
+            }, 1500);//2000 - 500ms )
+            return (
+                <div className="alert" >
+                    <h1>
+                        {"Player \"" + (this.state.xIsNext ? 'O' : 'X') + "\" won"}{/*true*false are changed because state change */}
+                    </h1>
+                    <h3>
+                        Please select "Go to game start" button
+                    </h3>
+                </div>
+            );
+        }
+
+        let click_me = this.state.clickMe ? this.clickMeButton() : "";
+
         return (
             <div className="game">
                 <div className="game-board">
@@ -246,7 +294,10 @@ class Game extends React.Component {
                 </div>
                 <div className="game-info">
                     <div>{status}</div>
-                    <div>{moves.slice(0,2)}</div>
+                    <div>
+                        {click_me}
+                        {moves.slice(0,2)}
+                    </div>
                     <div>{this.state.order ? moves.slice(2) : moves.slice(2).reverse()}</div>
                 </div>
             </div>
