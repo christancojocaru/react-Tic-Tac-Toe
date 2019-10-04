@@ -3,6 +3,24 @@ body {
     margin: 20px;
 }
 
+.select-player {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.start-input {
+    width: 150px;
+    height: 40px;
+    font-size: 20px;
+    color: hotpink;
+}
+
+.start-button {
+    margin: 50px 0 0 0;
+}
+
 ol, ul {
     padding-left: 30px;
 }

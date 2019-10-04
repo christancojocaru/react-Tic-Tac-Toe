@@ -45,6 +45,7 @@ class Board extends React.Component {
             />
         );
     }
+
     renderSquareWithNumber(number, scaling, key) {
         let classNames = ["square", "info", scaling];
         return (
@@ -102,7 +103,8 @@ class Game extends React.Component {
             hovered: Array(9).fill(false),
             order: true,
             won: false,
-            clickMe: false
+            clickMe: false,
+            playerSelected: false
         };
     }
 
@@ -149,10 +151,19 @@ class Game extends React.Component {
         });
     }
 
-    jumpTo(step) {
+    jumpTo(index, step) {
+        console.log("index = " + index + "\n step = " + step.squares );
+        let current_xIxNext = this.state.xIsNext;
+        let current_stepNumber = this.state.stepNumber;
+        let new_xIsNext;
+        if (index === 0) {
+            new_xIsNext = (current_stepNumber % 2) === 0 ? current_xIxNext : !current_xIxNext;
+        } else {
+            new_xIsNext = ( (current_stepNumber - index) % 2) === 0 ? current_xIxNext : !current_xIxNext;
+        }
         this.setState({
-            stepNumber: step,
-            xIsNext: (step % 2) === 0,
+            stepNumber: index,
+            xIsNext: new_xIsNext,
         });
     }
 
@@ -204,17 +215,16 @@ class Game extends React.Component {
             <li key={index}>
                 <button
                     onClick={() => {
-                        this.jumpTo(index);
-                        this.setState({clickMe: false});
-                        this.setState({
-                            clickMe: false,
-                            hovered: Array(9).fill(false),
-                            history: [{
-                                squares: Array(9).fill(null),
-                            }],
-                        });
+                        this.jumpTo(index, step);
+                        // this.setState({
+                        //     clickMe: false,
+                        //     hovered: Array(9).fill(false),
+                        //     history: [{
+                        //         squares: Array(9).fill(null),
+                        //     }],
+                        // });
                     }}
-                    onMouseOver={() => index === 0 ? "" : this.unHighlightsSquare()}
+                    onMouseOver={() => index === 0 ? "" : this.highlightsSquare(step)}
                     onMouseLeave={() => index === 0 ? "" : this.unHighlightsSquare()}
                 >
                     {desc}
@@ -232,8 +242,50 @@ class Game extends React.Component {
         );
     }
 
+    createPlayer(name) {
+        return (
+            <option
+                onClick={() => this.setState({
+                    xIsNext: name === "X"
+                })}
+            >
+                Player {name}</option>
+        );
+    }
+
     render() {
+        if (!this.state.playerSelected) {
+            return (
+                <div className="select-player">
+                    <select
+                        className="start-input"
+                        defaultValue={'default'}
+                    >
+                        <option value={'default'} disabled>Select player</option>
+                        {this.createPlayer("X")}
+                        {this.createPlayer("O")}
+                    </select>
+                    <div className="start-button">
+                        <button
+                            className="start-input"
+                            onClick={() => {
+                                let select = document.querySelector("select");
+                                let isSelect = select.value !== "default";
+                                if (isSelect) {
+                                    this.setState({playerSelected: true})
+                                } else {
+                                    select.click();
+                                }
+                            }}>
+                            Start Game
+                        </button>
+                    </div>
+                </div>
+            );
+        }
+
         const history = this.state.history;
+        console.log(history, this.state.stepNumber);
         const current = history[this.state.stepNumber];
         const winner = calculateWinner(current.squares);
 
