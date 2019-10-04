@@ -216,13 +216,15 @@ class Game extends React.Component {
                 <button
                     onClick={() => {
                         this.jumpTo(index, step);
-                        // this.setState({
-                        //     clickMe: false,
-                        //     hovered: Array(9).fill(false),
-                        //     history: [{
-                        //         squares: Array(9).fill(null),
-                        //     }],
-                        // });
+                        if (index === 0) {
+                            this.setState({
+                                clickMe: false,
+                                hovered: Array(9).fill(false),
+                                history: [{
+                                    squares: Array(9).fill(null),
+                                }],
+                            });
+                        }
                     }}
                     onMouseOver={() => index === 0 ? "" : this.highlightsSquare(step)}
                     onMouseLeave={() => index === 0 ? "" : this.unHighlightsSquare()}
