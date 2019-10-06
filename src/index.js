@@ -1,6 +1,10 @@
 import React from 'react';
 import ReactDom from 'react-dom';
 import './index.scss';
+import openSocket from 'socket.io-client';
+
+//Make connection
+const socket = openSocket('http://localhost:4000');
 
 
 class Square extends React.Component {
@@ -359,10 +363,74 @@ class Game extends React.Component {
     }
 }
 
+class Connection extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      username: null,
+      players: null
+    };
+  }
+
+  render() {
+    if (this.state.username === null) {
+      return (
+        <div>
+          <input id="name" type="text" placeholder="Please insert a name" />
+          <button
+            onClick={() => {
+              let value = document.getElementById("name").value;
+              let data = {id: socket.id, name: value}
+              socket.emit("addPlayer", data);
+              this.setState({username: value});
+            }}
+          >Send</button>
+        </div>
+      );
+    }
+
+    socket.on('receivePlayers', (players) => {
+      this.setState({players: players});
+    });
+
+    let players = this.state.players;
+    if (players === null || players.length === 2) {
+      return (<p>Please wait for oponents</p>);
+    }
+    players = players.filter((player) => {
+      return (player.socket_id === socket.id ? false : true);
+    });
+    let data = players.map((player, id) => {
+      return (<Player id={id} name={player.name} />);
+    });
+    return (
+      <div>
+      <p>Hello <b>{this.state.username}</b>. Please select a player</p>
+        <ol>
+        {data}
+        </ol>
+      </div>
+    );
+  }
+}
+
+class Player extends React.Component {
+  render() {
+    return (
+      <li key={this.props.id}>{this.props.name}</li>
+    );
+  }
+}
+
 ReactDom.render(
-    <Game />,
-    document.getElementById("root")
+  <Connection />,
+  document.getElementById("user")
 );
+
+// ReactDom.render(
+//     <Game />,
+//     document.getElementById("root")
+// );
 
 function getColAndRow(i) {
     return {row : Math.floor(i / 3) + 1, col : i % 3 + 1};
