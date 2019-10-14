@@ -13,6 +13,12 @@
       document.body.classList.add('kbd-navigation');
       document.body.classList.remove('mouse-navigation');
     }
+    if (e.keyCode === 13) {
+      let button = document.getElementById("send_name");
+      if (button !== null) {
+        button.click();
+      }
+    }
   });
   window.addEventListener('click', function(e) {
     if (e.target.tagName === 'A' && e.target.getAttribute('href') === '#') {
