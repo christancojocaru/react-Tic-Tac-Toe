@@ -26,6 +26,10 @@ body {
     color: hotpink;
 }
 
+.close-input {
+  
+}
+
 .start-button {
     margin: 50px 0 0 0;
 }
@@ -154,6 +158,28 @@ li button {
     position: absolute;
     top: 16px;
     right: 450px;
+}
+
+.player-data {
+  display: flex;
+  flex-direction: row;
+  width: 250px;
+  height: 40px;
+  margin: 10px 0;
+  li {
+    flex: 1;
+  }
+}
+
+.player-button {
+  height: inherit;
+  margin: 0;
+  padding: 0;
+  color: red;
+  font-size: 20px;
+  flex: 0 1 30%;
+  border: none;
+  border-radius: 50px;
 }
 
 .red {

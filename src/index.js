@@ -6,7 +6,6 @@ import openSocket from 'socket.io-client';
 //Make connection
 const socket = openSocket('http://localhost:4000');
 
-
 class Square extends React.Component {
     constructor(props) {
         super(props);
@@ -99,6 +98,7 @@ class Game extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
+            room_id: this.props.room_id,
             history: [{
                 squares: Array(9).fill(null),
             }],
@@ -108,7 +108,8 @@ class Game extends React.Component {
             order: true,
             won: false,
             clickMe: false,
-            playerSelected: false
+            playerSelected: false,
+            name: this.props.name
         };
     }
 
@@ -263,6 +264,7 @@ class Game extends React.Component {
         if (!this.state.playerSelected) {
             return (
                 <div className="select-player">
+                  <h3>Please Select a player Mr. {this.state.name} .</h3>
                     <select
                         className="start-input"
                         defaultValue={'default'}
@@ -284,6 +286,17 @@ class Game extends React.Component {
                                 }
                             }}>
                             Start Game
+                        </button>
+                        <button
+                            className="close-input"
+                            onClick={() => {
+                              changeConnectionToGame({
+                                game: false,
+                                room_id: this.state.room_id,
+                                name: this.state.name
+                              });
+                            }}>
+                            Select another player
                         </button>
                     </div>
                 </div>
@@ -367,9 +380,33 @@ class Connection extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      username: null,
-      players: null
+      username: this.props.name,
+      players: null,
+      room: null,
+      player_want_you: null,
+      interval_id: null
     };
+  }
+
+  componentDidMount() {
+    let interval_id = setInterval(() => {
+      console.log("receiving Players");
+      socket.on('receive_players', (players) => {
+        console.log(players);
+        this.setState({players: players});
+      });
+
+      console.log("receiving connection");
+      socket.on('connect_player', (name) => {
+        this.setState({player_want_you: name});
+      });
+
+    }, 3000);
+    this.setState({interval_id: interval_id});
+  }
+
+  componentWillUnmount() {
+    clearInterval(this.state.interval_id);
   }
 
   render() {
@@ -381,27 +418,27 @@ class Connection extends React.Component {
             onClick={() => {
               let value = document.getElementById("name").value;
               let data = {id: socket.id, name: value}
-              socket.emit("addPlayer", data);
-              this.setState({username: value});
+              socket.emit("add_player", data);
+              this.setState({
+                username: value
+              });
             }}
           >Send</button>
         </div>
       );
     }
 
-    socket.on('receivePlayers', (players) => {
-      this.setState({players: players});
-    });
+    let player_want_you = this.state.player_want_you
 
     let players = this.state.players;
-    if (players === null || players.length === 2) {
+    if (players === null || players.length === 1) {
       return (<p>Please wait for oponents</p>);
     }
     players = players.filter((player) => {
-      return (player.socket_id === socket.id ? false : true);
+      return player.socket_id !== socket.id;
     });
     let data = players.map((player, id) => {
-      return (<Player id={id} name={player.name} />);
+      return (<Player key={id} name={player.name} player_want_you={player_want_you}/>);
     });
     return (
       <div>
@@ -415,22 +452,81 @@ class Connection extends React.Component {
 }
 
 class Player extends React.Component {
+  makeButton(state) {
+    let player_want_you = this.props.player_want_you;
+
+    if (player_want_you !== null && player_want_you === this.props.name) {
+      return (
+        <button
+          className="player-button"
+          onClick={() => {
+            let data = {
+              name: this.props.player_want_you,
+              room_id: Math.floor(Math.random() * 100)
+            }
+            socket.emit("create_room", data);
+            setTimeout(changeConnectionToGame, 500, {game: true, room_id: data.room_id, name: this.props.name});
+          }}>
+        Join
+        </button>
+      );
+    } else {
+      return (
+        <button
+          className="player-button"
+          onClick={() => {
+            socket.emit("connect_player", this.props.name);
+          }}>
+        Select
+        </button>
+      );
+    }
+  }
+
   render() {
+    socket.on('join_room', (data) => {
+      changeConnectionToGame({game: true, room_id: data.room_id, name: this.props.name});
+      socket.emit("join_room", [data.room_id, data.socket_id]);
+     });
+
     return (
-      <li key={this.props.id}>{this.props.name}</li>
+      <div className="player-data">
+        <li>{this.props.name}</li>
+        {this.makeButton()}
+      </div>
     );
   }
 }
 
 ReactDom.render(
-  <Connection />,
+  <Connection name={null} />,
   document.getElementById("user")
 );
 
-// ReactDom.render(
-//     <Game />,
-//     document.getElementById("root")
-// );
+ socket.on("hello", () => {
+   alert("hello");
+ });
+
+function changeConnectionToGame(data) {
+  if (data.game) {
+    ReactDom.unmountComponentAtNode(
+      document.getElementById("user")
+    );
+    ReactDom.render(
+        <Game room_id={data.room_id} name={data.name} />,
+        document.getElementById("root")
+    );
+    socket.emit('test', data.room_id);
+  } else {
+    ReactDom.unmountComponentAtNode(
+      document.getElementById("root")
+    );
+    ReactDom.render(
+      <Connection name={data.name} />,
+      document.getElementById("user")
+    );
+  }
+}
 
 function getColAndRow(i) {
     return {row : Math.floor(i / 3) + 1, col : i % 3 + 1};
