@@ -4,7 +4,7 @@ import './index.scss';
 import openSocket from 'socket.io-client';
 
 //Make connection
-const socket = openSocket('http://localhost:4000');
+const socket = openSocket('http://192.168.1.200:4000');
 
 class Player extends React.Component {
   constructor(props) {
@@ -78,6 +78,7 @@ class Connection extends React.Component {
     };
 
     socket.on('receive_players', (players) => {
+      // alert("i receive players");
       let other_players = players.filter((player) => {
         return player.socket_id !== socket.id;
       });
@@ -91,7 +92,6 @@ class Connection extends React.Component {
 
   render() {
     let players = this.state.players;
-    console.log(players);
     if (players === null || players.length === 0) {
       return (<p><strong>{this.state.name}</strong>. Please wait for oponents</p>);
     }
@@ -138,9 +138,8 @@ class Board extends React.Component {
       key={key}
       value={this.props.squares[index]}
       onClick={() => {
-        this.props.onClick(index);
-        if (!this.props.IamNext) {
-          alert("Not your turn!");
+        if (this.props.IamNext) {
+          this.props.onClick(index);
         }
       }}
       // isHovered={this.props.hovered[index]}
@@ -161,7 +160,7 @@ class Board extends React.Component {
   }
 
   render() {
-    const rows = [0, 3, 6];
+    const rows =    [0, 3, 6];
     const columns = [1, 2, 3];
     return (
       <div>
@@ -199,8 +198,8 @@ class Game extends React.Component {
     name: null,
     room_id: null,
     isPlayerSelected: false,
-    player: null,
-    IamNext: null,
+    player: 'default',
+    IamNext: false,
     won: false,
     history: [{squares: Array(9).fill(null),}],
     stepNumber: 0,
@@ -223,7 +222,7 @@ class Game extends React.Component {
     this.setState({
       room_id: null,
       isPlayerSelected: false,
-      player: null,
+      player: 'default',
       IamNext: null,
       won: false,
       history: [{squares: Array(9).fill(null),}],
@@ -245,79 +244,41 @@ class Game extends React.Component {
   }
 
   handleClick(i) {
-    // const Next = this.state.IamNext ? 'X' : 'O';
-    // const history = this.state.history.slice(0, this.state.stepNumber + 1);
-    // const current = history[history.length - 1];
-    // const squares = current.squares.slice();
-    // const winner = calculateWinner(squares);
-    // const squares_modified = squares.slice();
-    // squares_modified.splice(i, 1, Next);
-    // console.log(calculateWinner(squares_modified));
+    const history = this.state.history.slice(0, this.state.stepNumber + 1);
+    const current = history[history.length - 1];
+    const squares = current.squares.slice();
+    const winner = calculateWinner(squares);
 
-    // if (calculateWinner(squares_modified)) {
-      // let winner = calculateWinner(squares_modified);
-    //   let hovered = Array(9).fill(false);
-    //   hovered.forEach(
-    //     (h_V, h_I) => {
-    //       winner[1].forEach(
-    //         (l_V) => {
-    //           if (h_I === l_V) {
-    //             hovered.splice(h_I, 0, true);
-    //           }
-    //         });
-    //       });
-    //       this.setState({
-    //         hovered: hovered,
-    //       });
-        // }
-    // if (squares[i] || winner[0]) {
-    //   this.setState({
-    //     won: true
-    //   });
-    //   return;
-    // }
-    // squares[i] = this.state.xIsNext ? 'X' : 'O';
-    // this.setState({
-    //   history: history.concat([{
-    //     squares: squares,
-    // //     grid: getColAndRow(i),
-    //   }]),
-    //   stepNumber: history.length,
-    //   IamNext: !this.state.IamNext
-    // });
+    if (squares[i] || winner[0]) {
+      this.setState({
+        won: true
+      });
+      return;
+    }
+
+    let player = this.state.player;
+    squares[i] = this.state.IamNext ? player : getOponentPlayer(player);
+    let stepNumber = history.length;
+    let data_to_modify = {
+      history: history.concat([{
+        squares: squares,
+    //     grid: getColAndRow(i),
+      }]),
+      stepNumber: stepNumber,
+      player: player,
+      IamNext: !this.state.IamNext,
+    };
+    this.setState(data_to_modify);
+    socket.emit("update_game", data_to_modify);
   }
 
   createPlayer(player_sign) {
     return (
-      <option
-      selected={this.state.player === player_sign}
-      onClick={() => {
-        this.setState({
-          player: player_sign,
-        });
-        socket.emit("selectedPlayer", {
-          room_id: this.state.room_id,
-          player: player_sign
-        })
-      }}
-      >
-      Player {player_sign}</option>
+      <option value={player_sign}>Player {player_sign}</option>
     );
   }
 
   render() {
-    const history = this.state.history;
-    const current = history[this.state.stepNumber];
-    const winner = calculateWinner(current.squares);
-
-    let status;
-    if (winner[0]) {
-      status = 'Winner: ' + winner[0];
-    } else {
-      let player =  this.state.player;
-      status = 'Next player: ' + (this.state.IamNext ? player : getOponentPlayer(player));
-    }
-
     if (this.state.name === null) {
       return (
         <div>
@@ -350,7 +311,17 @@ class Game extends React.Component {
         <h3>Please Select a player Mr. {this.state.name} .</h3>
         <select
         className="start-input"
-        defaultValue={'default'}
+        value={this.state.player}
+        onChange={(event) => {
+          let player = event.target.value;
+          this.setState({
+            player: player,
+          });
+          socket.emit("selectedPlayer", {
+            room_id: this.state.room_id,
+            player: player
+          })
+        }}
         >
         <option value={'default'} disabled>Select player</option>
         {this.createPlayer("X")}
@@ -388,8 +359,22 @@ class Game extends React.Component {
       );
     }
 
+    const history = this.state.history;
+    const current = history[this.state.stepNumber];
+    const winner = calculateWinner(current.squares);
+    const player =  this.state.player;
+
+    let status;
+    if (winner[0]) {
+      status = 'Winner: ' + winner[0];
+    } else {
+
+      status = 'Next player: ' + (this.state.IamNext ? player : getOponentPlayer(player));
+    }
+
     return (
       <div className="game">
+        <h1 className="user-name">{player}</h1>
         <div className="game-board">
           <Board
           squares={current.squares}
