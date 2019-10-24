@@ -1,3 +1,9 @@
+@import url('https://fonts.googleapis.com/css?family=Jomolhari&display=swap');
+
+* {
+  font-family: 'Jomolhari', serif;
+}
+
 #errors {
   background: #c00;
   color: #fff;
@@ -8,156 +14,234 @@
 }
 
 body {
-    font: 14px "Century Gothic", Futura, sans-serif;
-    margin: 20px;
+  margin: 20px;
+}
+
+#insert-name {
+  width: 50vw;
+  height: 10vh;
+  position: relative;
+  top: 50vh;
+  left: 50vw;
+  transform: translate(-50%, -50%);
+  overflow: hidden;
+}
+
+#insert-name input {
+  width: 100%;
+  height: 50%;
+  font-size: 16px;
+  color: #595f6e;
+  padding-top: 20px;
+  border: none;
+  outline: none;
+}
+
+#insert-name label {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  border-bottom: 1px solid black;
+  --my-border-color: "";
+}
+
+#insert-name label::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -1px;
+  height: 100%;
+  width: 100%;
+  border-color: var(--my-border-color) !important;
+  border-bottom: 3px solid #5fa8d3;
+  transform: translateX(-50vw);
+  transition: transform 0.3s ease;
+}
+
+#insert-name label span {
+  animation: spanOutAnimation 150ms ease-in;
+  position: absolute;
+  font-size: 16px;
+  bottom: 4px;
+  transition: all 0.3s ease;
+}
+
+#insert-name input:focus + label span,
+#insert-name input:valid + label span{
+  color: #5fa8d3;
+  animation: spanInAnimation 400ms ease-in;
+  transform: translateY(-100%);
+  font-size: 12px;
+}
+
+#insert-name input:focus + label::after,
+#insert-name input:valid + label::after {
+  transform: translateX(0%);
+}
+
+#send_name {
+  position: relative;
+  width: 30vw;
+  height: 6vh;
+  top: 55vh;
+  left: 50vw;
+  transform: translate(-50%, -50%);
 }
 
 .select-player {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  animation: selectPlayerAnimation 500ms ease;
 }
 
 .start-input {
-    width: 150px;
-    height: 40px;
-    font-size: 20px;
-    color: hotpink;
+  width: 150px;
+  height: 40px;
+  font-size: 20px;
+  color: hotpink;
+}
+
+.user-name {
+  font-size: 12px;
 }
 
 .close-input {
-  
+
 }
 
 .start-button {
-    margin: 50px 0 0 0;
+  margin: 50px 0 0 0;
 }
 
 ol, ul {
-    padding-left: 30px;
+  padding-left: 30px;
 }
 
 .board-row:after {
-    clear: both;
-    content: "";
-    display: table;
+  clear: both;
+  content: "";
+  display: table;
 }
 
 .status {
-    margin-bottom: 10px;
+  margin-bottom: 10px;
 }
 
 .square {
-    background: #fff;
-    border: 1px solid #999;
-    float: left;
-    font-size: 24px;
-    font-weight: bold;
-    line-height: 34px;
-    height: 34px;
-    margin-right: -1px;
-    margin-top: -1px;
-    padding: 0;
-    text-align: center;
-    width: 34px;
+  background: #fff;
+  border: 1px solid #999;
+  float: left;
+  font-size: 24px;
+  font-weight: bold;
+  line-height: 34px;
+  height: 34px;
+  margin-right: -1px;
+  margin-top: -1px;
+  padding: 0;
+  text-align: center;
+  width: 34px;
 }
 
 .hovered {
-    background-color: red;
+  background-color: red;
 }
 
 .info {
-    font-weight: initial;
-    font-size: 20px;
-    width: 34px;
-    height: 34px;
-    border: none;
+  font-weight: initial;
+  font-size: 20px;
+  width: 34px;
+  height: 34px;
+  border: none;
 }
 
 .horizontal {
-    margin-bottom: 3px;
+  margin-bottom: 3px;
 }
 
 .vertical {
-    margin-right: 3px;
+  margin-right: 3px;
 }
 
 .horizontal.vertical {
-    font-style: italic;
+  font-style: italic;
 }
 
 .square:focus {
-    outline: none;
+  outline: none;
 }
 
 .kbd-navigation .square:focus {
-    background: #ddd;
+  background: #ddd;
 }
 
 .game {
-    display: flex;
-    flex-direction: row;
+  display: flex;
+  flex-direction: row;
 }
 
 .game-info {
-    margin-left: 20px;
+  margin-left: 20px;
 }
 
 li {
-    list-style-type: none;
-    margin: 5px 0;
+  list-style-type: none;
+  margin: 5px 0;
 }
 
 li button {
-    width: 250px;
-    text-align: left;
+  width: 250px;
+  text-align: left;
 }
 
 .sort {
-    border: none;
-    width: initial;
+  border: none;
+  width: initial;
 }
 
 .sort:hover {
-    .order {
-        background-color: red;
-    }
+  .order {
+    background-color: red;
+  }
 }
 
 .alert {
-    animation: fadeIn 500ms linear;
-    width: 100vw;
-    height: 100vh;
-    position: fixed;
-    top: 0;
-    right: 0;
-    background-color: red;
+  animation: fadeIn 500ms linear;
+  width: 100vw;
+  height: 100vh;
+  position: fixed;
+  top: 0;
+  right: 0;
+  background-color: red;
 }
 
 .alert h1, .alert h3 {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
 }
 
 .alert h3 {
-    top: 60%;
+  top: 60%;
 }
 
 .click-me {
-    background-color: red;
-    width: 80px;
-    height: 30px;
-    border-radius: 50px;
-    text-align: center;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    position: absolute;
-    top: 16px;
-    right: 450px;
+  background-color: red;
+  width: 80px;
+  height: 30px;
+  border-radius: 50px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  position: absolute;
+  top: 16px;
+  right: 450px;
 }
 
 .player-data {
@@ -183,23 +267,73 @@ li button {
 }
 
 .red {
-    background-color: red;
+  background-color: red;
 }
-
 @keyframes fadeIn {
-    0% {
-        opacity: 0;
-    }
-    100% {
-        opacity: 1;
-    }
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
 }
-
 @keyframes fadeOut {
-    0% {
-        opacity: 1;
-    }
-    100% {
-        opacity: 0;
-    }
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes nameAnimation {
+  0% {
+    transform: scale(0.1);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+  100% {transform: scale(1);}
+}
+@keyframes spanInAnimation {
+  0% {transform: translateY(0%);}
+  60% {transform: translateY(-60%);}
+  100% {transform: translateY(-100%);}
+}
+@keyframes spanOutAnimation {
+  0% {
+    transform: translateY(-80%);
+    font-size: 14px;
+  }
+  60% {
+    transform: translateY(-40%);
+  }
+  100% {
+    transform: translateY(0%);
+  }
+}
+@keyframes waitPlayerAnimation {
+  0% {
+    opacity: 0.2;
+    transform: translate(25vw, 50vh);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(0, 0);
+  }
+}
+@keyframes joinButtonAnimation {
+  0% {transform: scale(1.6);}
+  35% {transform: scale(1);}
+  70% {transform: scale(1.6);}
+  100% {transform: scale(1);}
+}
+@keyframes selectPlayerAnimation {
+  0% {
+    transform: scale(0.2) translate(0, 0);
+  }
+  100% {
+    transform: scale(1) translate(-50%, -50%);
+  }
 }

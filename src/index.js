@@ -14,22 +14,21 @@ class Player extends React.Component {
       want_you: false,
     };
     socket.on('send_connection', (data) => {
-      // alert("I receive send_connection");
-      //receive n times (n are number of server connections)
-      //don't know why
       if (this.state.name === data.his_name) {
         this.setState({
           want_you: true,
         });
       }
     });
-    socket.on("Not_Available", (message) => console.log(message));
+    socket.on("not_available", () => this.setState({clicked: false}));//a function to see not not_available
+    // on select change to wait
   }
 
   makePlayer() {
     if (this.state.want_you) {
       return (
         <button
+        style={{animation : "joinButtonAnimation 400ms ease-in"}}
         className="player-button"
         onClick={() => {
           let data = {
@@ -42,11 +41,16 @@ class Player extends React.Component {
         Join
         </button>
       );
+    } else if (this.state.clicked) {
+      return (
+        <button className="player-button">Wait</button>
+      );
     } else {
       return (
         <button
         className="player-button"
         onClick={() => {
+          this.setState({clicked: true});
           let data = {
             my_name: this.props.player_name,
             his_name: this.state.name,
@@ -76,9 +80,7 @@ class Connection extends React.Component {
       name: this.props.name,
       players: null
     };
-
     socket.on('receive_players', (players) => {
-      // alert("i receive players");
       let other_players = players.filter((player) => {
         return player.socket_id !== socket.id;
       });
@@ -93,7 +95,13 @@ class Connection extends React.Component {
   render() {
     let players = this.state.players;
     if (players === null || players.length === 0) {
-      return (<p><strong>{this.state.name}</strong>. Please wait for oponents</p>);
+      return (
+        <div
+        style={{animation : "waitPlayerAnimation 1s ease-in"}}
+        >
+          <p><strong>{this.state.name}</strong>. Please wait for oponents</p>
+        </div>
+      );
     }
     let data = players.map((player, id) => {
       return (<Player
@@ -197,11 +205,12 @@ class Move extends React.Component {
   render() {
     let indexKey = this.props.indexKey;
     let step = this.props.step;
+    let condition_response = this.state.rewind && this.state.data.indexKey === indexKey;
     return(
       <li key={indexKey}>
         <button
         onClick={() => {
-          if (this.state.rewind) {
+          if (condition_response) {
             socket.emit("answearRewindMove", this.state.data);
           } else {
             let data = {
@@ -214,13 +223,91 @@ class Move extends React.Component {
         onMouseOver={() => indexKey === 0 ? "" : this.props.highlightsSquare(step)}
         onMouseLeave={() => indexKey === 0 ? "" : this.props.unHighlightsSquare()}
         >
-        {(this.state.rewind && this.state.data.indexKey === indexKey) ? "Player want to move to this step. Click if you are agree" : this.props.desc}
+        {(condition_response) ? "Player want to move to this step. Click if you are agree" : this.props.desc}
+        </button>
+      </li>
+    );
+  }
+}
+
+class Info extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      order: true,
+      clickMe: false,
+    };
+  }
+
+  makeSortButton() {
+    return (
+      <li key="sort">
+        <button
+        onClick={() => {
+          this.setState({
+            order: !this.state.order
+          });
+        }}
+        className="sort"
+        title="sort moves"
+        >
+        Sort the moves <span className="order">{this.state.order ? "desc" : "asc"}</span>
         </button>
       </li>
     );
   }
 
-  // move(index, step = null, desc) {
+  highlightsSquare(step) {
+    const history_squares = this.props.history[this.props.history.length - 1].squares.slice();
+    const step_squares = step.squares;
+    let hovered_result = [];
+
+    history_squares.forEach((h_s_V, h_s_I) => {
+        hovered_result[h_s_I] = (step_squares[h_s_I] === h_s_V) ? !!h_s_V : false;
+    });
+    this.props.setStateFromChild(hovered_result)
+    socket.emit("hovered", {hovered: hovered_result});
+  }
+
+  unHighlightsSquare() {
+    let hovered = Array(9).fill(false);
+    this.props.setStateFromChild(hovered)
+    socket.emit("hovered", {hovered: hovered});
+  }
+
+  render() {
+    const history = this.props.history;
+    const moves = history.map((step, index) => {
+      let grid = step.grid;
+      const desc = index ?
+      'Go to move #' + index + " (Column: " + grid.col + ", Row: " + grid.row + ")" :
+      'Go to game start';
+
+      return (
+        <Move
+        key={index * index + 2}
+        indexKey={index}
+        desc={desc}
+        step={step}
+        highlightsSquare={this.highlightsSquare.bind(this)}
+        unHighlightsSquare={this.unHighlightsSquare.bind(this)}
+        />
+      );
+    });
+    let click_me = this.state.clickMe ? this.clickMeButton() : "";
+
+    moves.splice(1, 0, this.makeSortButton());
+    return (
+      <div className="game-info">
+        <div>{this.props.status}</div>
+        <div>
+        {click_me}
+        {moves.slice(0,2)}
+        </div>
+        <div>{this.state.order ? moves.slice(2) : moves.slice(2).reverse()}</div>
+      </div>
+    );
+  }
 }
 
 class Game extends React.Component {
@@ -235,9 +322,7 @@ class Game extends React.Component {
       won: false,
       history: [{squares: Array(9).fill(null),}],
       stepNumber: 0,
-      hovered: Array(9).fill(false),
-      order: true,
-      // clickMe: false,
+      hovered: Array(9).fill(false)
     };
     socket.on("init_game", (data) => {
       this.setState({
@@ -245,6 +330,7 @@ class Game extends React.Component {
       });
     });
     socket.on("selectedPlayer", (data) => {
+      alert("I RECEIVE SELECT$ED PLAYER");
       this.setState({
         player: data.player === "X" ? "O" : "X",
       });
@@ -281,7 +367,6 @@ class Game extends React.Component {
     socket.on("answearRewindMove", (data) => {
       this.jumpTo(data.indexKey, data.step);
     });
-
   }
 
   handleClick(i) {
@@ -326,11 +411,11 @@ class Game extends React.Component {
       IamNext: !this.state.IamNext,
     };
     this.setState(data_to_modify);
+    data_to_modify.room_id = this.state.room_id;
     socket.emit("update_game", data_to_modify);
   }
 
   jumpTo(index, step) {
-    console.log("index = " + index + "\n step = " + step.squares );
     let current_IamNext = this.state.IamNext;
     let current_stepNumber = this.state.stepNumber;
     let new_IamNext;
@@ -339,91 +424,15 @@ class Game extends React.Component {
     } else {
       new_IamNext = ( (current_stepNumber - index) % 2) === 0 ? current_IamNext : !current_IamNext;
     }
-    console.log("stepNumber " + index + " new IamNext: " + new_IamNext + " old IamNext " + current_IamNext);
     this.setState({
       stepNumber: index,
       IamNext: new_IamNext,
     });
   }
 
-  highlightsSquare(step) {
-    const history_squares = this.state.history[this.state.history.length - 1].squares.slice();
-    const step_squares = step.squares;
-
-    let hovered_result = [];
-    history_squares.forEach(
-      (h_s_V, h_s_I) => {
-        hovered_result[h_s_I] =
-        (step_squares[h_s_I] === h_s_V) ?
-        !!h_s_V :
-        false;
-      });
-      this.setState({
-        hovered: hovered_result
-      });
-      socket.emit("hovered", {hovered: hovered_result});
-    }
-
-  unHighlightsSquare() {
-    let hovered = Array(9).fill(false);
+  setStateFromChild(hovered) {
     this.setState({hovered: hovered});
-    socket.emit("hovered", {hovered: hovered});
   }
-
-  sort() {
-    this.setState({
-      order: !this.state.order
-    });
-  }
-
-  makeSortButton() {
-    return (
-      <li key="sort">
-        <button
-        onClick={() => this.sort()}
-        className="sort"
-        title="sort moves"
-        >
-        Sort the moves <span className="order">{this.state.order ? "desc" : "asc"}</span>
-        </button>
-      </li>
-    );
-  }
-
-  // move(index, step = null, desc) {
-  //   return (
-  //     <li key={index}>
-  //       <button
-  //       onClick={() => {
-  //         socket.emit("questionRewindMove");
-  //         let response = false;
-  //         socket.on("responseRewindMove", (data) => {
-  //           alert("In response");
-  //           response = data.response
-  //         });
-  //         if (response) {
-  //           this.jumpTo(index, step);
-  //           if (index === 0) {
-  //             this.setState({
-  //               // clickMe: false,
-  //               hovered: Array(9).fill(false),
-  //               history: [{
-  //                 squares: Array(9).fill(null),
-  //               }],
-  //             });
-  //           }
-  //
-  //         }
-  //       }}
-  //       onMouseOver={() => index === 0 ? "" : this.highlightsSquare(step)}
-  //       onMouseLeave={() => index === 0 ? "" : this.unHighlightsSquare()}
-  //       >
-  //       {desc}
-  //       </button>
-  //     </li>
-  //   );
-  // }
-
 
   createPlayer(player_sign) {
     return (
@@ -434,10 +443,23 @@ class Game extends React.Component {
   render() {
     if (this.state.name === null) {
       return (
-        <div>
-          <input id="name" type="text" placeholder="Please insert a name" />
+        <div
+        style={{animation : "nameAnimation 1s ease-in"}}
+        >
+          <div id="insert-name">
+            <input
+            id="name"
+            name="name"
+            type="text"
+            autocomplete="off"
+            required="true"
+            />
+            <label for="name">
+              <span>Please insert a name</span>
+            </label>
+          </div>
           <button
-          id={"send_name"}
+          id="send_name"
           onClick={() => {
             let inserted_name = document.getElementById("name").value;
             let data = {
@@ -461,7 +483,7 @@ class Game extends React.Component {
     if (!this.state.isPlayerSelected) {
       return (
         <div className="select-player">
-          <h3>Please Select a player Mr. {this.state.name} .</h3>
+          <h2>Please Select a player Mr. {this.state.name} .</h2>
           <select
           className="start-input"
           value={this.state.player}
@@ -489,6 +511,7 @@ class Game extends React.Component {
               if (isSelect) {
                 this.setState({isPlayerSelected: true})
                 socket.emit("start_game", {
+                  room_id: this.state.room_id,
                   player: this.state.player,
                   history: this.state.history,
                   hovered: this.state.hovered,
@@ -519,37 +542,16 @@ class Game extends React.Component {
     const winner = calculateWinner(current.squares);
     const player =  this.state.player;
 
-    const moves = history.map((step, index) => {
-      let grid = step.grid;
-      const desc = index ?
-      'Go to move #' + index + " (Column: " + grid.col + ", Row: " + grid.row + ")" :
-      'Go to game start';
-
-      return (
-        <Move
-        key={index * index + 2}
-        indexKey={index}
-        desc={desc}
-        step={step}
-        highlightsSquare={this.highlightsSquare.bind(this)}
-        unHighlightsSquare={this.unHighlightsSquare.bind(this)}
-        />
-      );
-    });
-    moves.splice(1, 0, this.makeSortButton());
-
     let status;
     if (winner[0]) {
       status = 'Winner: ' + winner[0];
     } else {
-
       status = 'Next player: ' + (this.state.IamNext ? player : getOponentPlayer(player));
     }
 
-    let click_me = this.state.clickMe ? this.clickMeButton() : "";
     return (
       <div className="game">
-        <h1 className="user-name">{player}</h1>
+        <h1 className="user-name">You are player {player}</h1>
         <div className="game-board">
           <Board
           squares={current.squares}
@@ -558,14 +560,11 @@ class Game extends React.Component {
           hovered={this.state.hovered}
           />
         </div>
-        <div className="game-info">
-          <div>{status}</div>
-          <div>
-          {click_me}
-          {moves.slice(0,2)}
-          </div>
-          <div>{this.state.order ? moves.slice(2) : moves.slice(2).reverse()}</div>
-        </div>
+        <Info
+        status={status}
+        history={this.state.history}
+        setStateFromChild={this.setStateFromChild.bind(this)}
+        />
       </div>
     );
   }
