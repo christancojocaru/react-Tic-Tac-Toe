@@ -87,7 +87,6 @@ class Connection extends React.Component {
       this.setState({players: other_players});
     });
     socket.on("join_connection", (data) => {
-      // alert("I receive join_connection");
       socket.emit("join_connection", data);
     });
   }
@@ -299,7 +298,7 @@ class Info extends React.Component {
     moves.splice(1, 0, this.makeSortButton());
     return (
       <div className="game-info">
-        <div>{this.props.status}</div>
+        <div className="info-status">{this.props.status}</div>
         <div>
         {click_me}
         {moves.slice(0,2)}
@@ -330,13 +329,11 @@ class Game extends React.Component {
       });
     });
     socket.on("selectedPlayer", (data) => {
-      alert("I RECEIVE SELECT$ED PLAYER");
       this.setState({
         player: data.player === "X" ? "O" : "X",
       });
     });
     socket.on("disconnect", () => {
-      // alert("i receive disconnect")
       this.setState({
         room_id: null,
         isPlayerSelected: false,
@@ -537,7 +534,6 @@ class Game extends React.Component {
     }
 
     const history = this.state.history;
-    console.log(this.state.history);
     const current = history[this.state.stepNumber];
     const winner = calculateWinner(current.squares);
     const player =  this.state.player;

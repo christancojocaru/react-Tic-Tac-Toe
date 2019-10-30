@@ -106,8 +106,31 @@ body {
   color: hotpink;
 }
 
+.game {
+  align-items: center;
+  width: inherit;
+  height: 80vh;
+  display: flex;
+  flex-direction: column;
+}
+
 .user-name {
-  font-size: 12px;
+  flex: 1;
+  font-size: 18px;
+}
+
+.game-board {
+  margin: 15px 0;
+  flex: 4;
+}
+
+.game-info {
+  flex: 4;
+}
+
+.info-status {
+  text-align: center;
+  font-size: 18px;
 }
 
 .close-input {
@@ -179,22 +202,14 @@ ol, ul {
   background: #ddd;
 }
 
-.game {
-  display: flex;
-  flex-direction: row;
-}
-
-.game-info {
-  margin-left: 20px;
-}
-
 li {
   list-style-type: none;
-  margin: 5px 0;
+  margin: 2px 0;
 }
 
 li button {
   width: 250px;
+  font-size: 12px;
   text-align: left;
 }
 
